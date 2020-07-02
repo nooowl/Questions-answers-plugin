@@ -32,11 +32,5 @@
     <extensions defaultExtensionNs="com.intellij">
     </extensions>
 
-    <actions>
-        <action class="ru.itmo.russkikh.plugin.Test" id="Test" text="Test">
-            <add-to-group group-id="ToolsMenu" anchor="first"/>
-            <keyboard-shortcut first-keystroke="shift ctrl F6" keymap="$default"/>
-        </action>
-    </actions>
 
 </idea-plugin>

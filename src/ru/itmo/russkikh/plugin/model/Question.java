@@ -7,7 +7,7 @@ public class Question {
     private final String text;
     private final PsiCommentImpl owner;
     private final String answer;
-    private int lastLineNumber;
+    private final int lastLineNumber;
 
     public Question(String name, String text, PsiCommentImpl owner, String answers, int lastLineNumber) {
         this.name = name;

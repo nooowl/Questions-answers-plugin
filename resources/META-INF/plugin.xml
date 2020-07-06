@@ -1,0 +1,23 @@
+<idea-plugin>
+    <id>ru.itmo.russkikh.plugin</id>
+    <name>Questions and Answers</name>
+    <version>1.0</version>
+    <vendor email="greenowl403@gmail.com" >Company</vendor>
+
+
+
+    <description><![CDATA[
+      This plugin for communicate between developers in code comments
+    ]]></description>
+
+    <idea-version since-build="173.0"/>
+
+    <depends>com.intellij.modules.platform</depends>
+
+
+    <project-components>
+        <component>
+            <implementation-class>ru.itmo.russkikh.plugin.Controller</implementation-class>
+        </component>
+    </project-components>
+</idea-plugin>

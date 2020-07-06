@@ -1,20 +1,20 @@
-package ru.itmo.russkikh.plugin;
+package ru.itmo.russkikh.plugin.model;
 
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
-
-import java.util.List;
 
 public class Question {
     private final String name;
     private final String text;
     private final PsiCommentImpl owner;
     private final String answer;
+    private int lastLineNumber;
 
-    public Question(String name, String text, PsiCommentImpl owner, String answers) {
+    public Question(String name, String text, PsiCommentImpl owner, String answers, int lastLineNumber) {
         this.name = name;
         this.text = text;
         this.owner = owner;
         this.answer = answers;
+        this.lastLineNumber = lastLineNumber;
     }
 
     public String getName() {
@@ -40,5 +40,9 @@ public class Question {
 
     public boolean isAnswered() {
         return answer != null;
+    }
+
+    public int getLastLineNumber() {
+        return lastLineNumber;
     }
 }

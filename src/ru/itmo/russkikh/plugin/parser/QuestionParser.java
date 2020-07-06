@@ -1,7 +1,8 @@
-package ru.itmo.russkikh.plugin;
+package ru.itmo.russkikh.plugin.parser;
 
 import com.intellij.openapi.util.Pair;
 import com.intellij.psi.impl.source.tree.PsiCommentImpl;
+import ru.itmo.russkikh.plugin.model.Question;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,38 +10,30 @@ import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Parser {
-    final List<PsiCommentImpl> comments;
-
+public class QuestionParser {
     private static final Pattern QUESTION_PATTERN = Pattern.compile("^[/\\s*]*\\?(.+):(.+)$");
-
     private static final Pattern QUESTION_PART_PATTERN = Pattern.compile("^[\\s]*-(.+)$");
-
     private static final Pattern ANSWER_PATTERN = Pattern.compile("^[/\\s*]*!answer:(.+)$");
 
-    public Parser(List<PsiCommentImpl> comments) {
+    private final List<PsiCommentImpl> comments;
+
+    public QuestionParser(List<PsiCommentImpl> comments) {
         this.comments = comments;
     }
 
-    public List<Question> createQuestionsList() {
+    public List<Question> parseQuestionsList() {
         List<Question> questions = new ArrayList<>();
         for (PsiCommentImpl comment : comments) {
             String[] commentLines = comment.getText().split("\n");
-            for (int i = 0; i < commentLines.length; i++) {
+            int i = 0;
+            while (i < commentLines.length) {
                 Pair<String, String> nameAndText = parseQuestion(commentLines[i]);
                 if (nameAndText != null) {
                     StringBuilder resultQuestion = new StringBuilder(nameAndText.second);
-                    for (int j = i + 1; j < commentLines.length; j++) {
-                        String questionPart = parseQuestionPart(commentLines[j]);
-                        if (questionPart != null) {
-                            resultQuestion.append(" ").append(questionPart);
-                        } else {
-                            i = j;
-                            break;
-                        }
-                    }
+                    i = parseQuestionOrAnswerParts(commentLines, i, resultQuestion);
+                    int lastLine = i - 1;
                     for (int j = i; j < commentLines.length; j++) {
-                        if(!commentLines[j].matches("\\s*")){
+                        if (!commentLines[j].matches("\\s*")) {
                             i = j;
                             break;
                         }
@@ -49,23 +42,31 @@ public class Parser {
                     String answer = null;
                     if (answerStart != null) {
                         StringBuilder resultAnswer = new StringBuilder(answerStart);
-                        for (int j = i + 1; j < commentLines.length; j++) {
-                            String answerPart = parseQuestionPart(commentLines[j]);
-                            if (answerPart != null) {
-                                resultAnswer.append(" ").append(answerPart);
-                            } else {
-                                i = j;
-                                break;
-                            }
-                        }
+                        i = parseQuestionOrAnswerParts(commentLines, i, resultAnswer);
                         answer = resultAnswer.toString();
                     }
-                    i--;
-                    questions.add(new Question(nameAndText.first, resultQuestion.toString(), comment, answer));
+                    questions.add(new Question(nameAndText.first, resultQuestion.toString(),
+                            comment, answer, lastLine));
+                } else {
+                    i++;
                 }
             }
         }
         return questions;
+    }
+
+    private int parseQuestionOrAnswerParts(String[] commentLines, int i, StringBuilder result) {
+        i++;
+        for (int j = i; j < commentLines.length; j++) {
+            String answerPart = parseQuestionOrAnswerPart(commentLines[j]);
+            if (answerPart != null) {
+                result.append(" ").append("\n").append(answerPart);
+            } else {
+                i = j;
+                break;
+            }
+        }
+        return i;
     }
 
     private Pair<String, String> parseQuestion(String comment) {
@@ -74,7 +75,7 @@ public class Parser {
         return new Pair<>(questionMatchResult.group(1).trim(), questionMatchResult.group(2).trim());
     }
 
-    private String parseQuestionPart(String comment) {
+    private String parseQuestionOrAnswerPart(String comment) {
         MatchResult questionPartMatchResult = getMatchResult(QUESTION_PART_PATTERN, comment);
         if (questionPartMatchResult == null) return null;
         return questionPartMatchResult.group(1).trim();
@@ -88,7 +89,7 @@ public class Parser {
         return matcher.toMatchResult();
     }
 
-    private String parseAnswer(String comment){
+    private String parseAnswer(String comment) {
         MatchResult answerMatchResult = getMatchResult(ANSWER_PATTERN, comment);
         if (answerMatchResult == null) return null;
         return answerMatchResult.group(1).trim();
